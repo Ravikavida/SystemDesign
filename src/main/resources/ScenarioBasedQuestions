@@ -1,0 +1,217 @@
+1)what are the Security measures you consider while developing an new new APi?
+ * Authentication – Use OAuth2/JWT or another strong authentication mechanism to verify the caller.
+ * Authorization – Implement RBAC/ABAC so users can access only the resources and operations they are permitted to access.
+ * Input validation – Validate request parameters, headers, payloads, file uploads, etc., to prevent injection and malformed requests.
+ * HTTPS/TLS – Enforce HTTPS for all API communication and avoid transmitting sensitive data over plain HTTP.
+ * Protect sensitive data – Never expose passwords, tokens, PII, or confidential information in API responses or logs. Encrypt sensitive data where required.
+ * SQL/NoSQL injection prevention – Use parameterized queries/JPA/Hibernate rather than constructing queries using user input.
+ * Rate limiting & throttling – Protect APIs against brute-force attacks, abuse, and traffic spikes.
+ * CORS & security headers – Configure CORS properly and use appropriate security headers rather than allowing unrestricted origins.
+ * JWT/token security – Validate signature, issuer, audience and expiration; use short-lived access tokens and secure refresh-token handling.
+ * API Gateway/WAF – In a microservices architecture, I would typically put APIs behind an API Gateway/WAF for centralized authentication, throttling, routing and threat protection.
+ * Error handling – Don't expose stack traces, database details, internal service names, or implementation information to clients.
+ * Logging & monitoring – Log security-relevant events such as authentication failures and suspicious activity, while ensuring secrets and PII aren't logged.
+ * Dependency security – Regularly scan third-party libraries and container images for known vulnerabilities.
+ * Secrets management – Never hard-code passwords, API keys, or database credentials. Store them in something like AWS Secrets Manager/Kubernetes Secrets with appropriate access controls.
+ * Security testing – Perform SAST, DAST, dependency scanning, penetration testing and API security testing as part of CI/CD.
+Real-time Spring Boot example
+
+“For example, in one of my Spring Boot microservices,
+I would put authentication at the API Gateway,
+validate the JWT in Spring Security, and then enforce role-based authorization
+at the service/API level. I would validate incoming DTOs using Bean Validation,
+use parameterized JPA queries, enforce HTTPS, apply rate limiting at the gateway,
+keep secrets outside the code, and make sure logs never contain tokens or
+sensitive employee information. Finally, security scanning would be integrated into the CI/CD pipeline.”
+
+
+2)How you will add the Roles to RBAC and How ABAC works?
+
+-> How do you add Roles in RBAC?
+ “In RBAC, I define roles based on business responsibilities, such as ADMIN, MANAGER, EMPLOYEE or AUDITOR.
+ A user is assigned one or more roles, and each role is mapped to specific permissions such as READ_PAYROLL, CREATE_PAYROLL or APPROVE_PAYROLL.”
+
+-> How do you actually store RBAC?
+
+“In an enterprise application, I generally maintain separate User, Role, Permission and mapping tables rather than hard-coding everything in the application.
+ This allows administrators to assign or revoke roles without changing application code.”
+
+ -> How does ABAC work?
+
+“ABAC doesn't make the decision purely based on the user's role.
+ It evaluates attributes of the user, resource, action and environment to dynamically decide whether access should be allowed.”
+
+ “In real enterprise systems, I don't necessarily choose only RBAC or ABAC.
+  I commonly use RBAC as the first authorization layer—for example,
+  only MANAGER can approve payroll—and then apply attribute-based checks at the business layer,
+  such as the manager can approve only employees belonging to their department.
+  This gives us both coarse-grained and fine-grained authorization.”
+
+
+3)How would you design an API that can handle 10K+ requests per second?
+
+“First, I would understand the traffic pattern—whether 10K RPS is steady or burst traffic, read-heavy or write-heavy, and what the latency SLA is. Then I would design the API to be stateless and horizontally scalable,
+ put it behind a load balancer/API Gateway, and scale multiple Spring Boot instances based on CPU, RPS and latency.”
+
+* API Layer
+
+“I would keep the API layer stateless so any request can be served by any instance. I would use an API Gateway or load balancer to distribute traffic across multiple application instances.”
+
+Clients
+   ↓
+API Gateway / Load Balancer
+   ↓
+Multiple Spring Boot Pods
+   ↓
+Service Layer
+* Horizontal Scaling
+
+“For 10K+ RPS, I would prefer horizontal scaling rather than relying on one large server. In Kubernetes,
+I would use HPA to dynamically add or remove pods based on CPU, memory and preferably application-level metrics such as RPS or latency.”
+
+10K RPS
+   ↓
+LB
+ ↓ ↓ ↓ ↓ ↓
+P1 P2 P3 P4 P5
+* Database — Most Important
+
+“The database is often the actual bottleneck, so I would not simply scale the application layer. I would optimize queries and indexes,
+ use connection pooling, read replicas for read-heavy workloads, and partition or shard data if the scale requires it.”
+
+For Spring Boot:
+
+Application
+    ↓
+HikariCP
+    ↓
+Database
+* Redis / Caching
+
+“For frequently accessed and relatively stable data, I would introduce Redis to avoid hitting the database for every request.
+ I would define an appropriate TTL and cache invalidation strategy based on the business requirement.”
+
+Request
+   ↓
+Redis ── HIT ──→ Response
+   │
+  MISS
+   ↓
+Database
+* Asynchronous Processing
+
+“If the API triggers non-critical downstream operations such as notifications, audit processing or reporting, I would make those asynchronous using Kafka. The API can return quickly instead of keeping the request thread blocked.”
+
+API
+ ↓
+Kafka
+ ↓
+Notification / Audit / Reporting
+* Connection Pools
+
+“I would carefully size HTTP client and database connection pools instead of blindly increasing them. Too many connections can actually overload the database and cause connection contention.”
+
+* Rate Limiting
+
+“At 10K+ RPS, I would also protect the platform from traffic spikes or abusive clients using gateway-level rate limiting and throttling. This prevents one client from consuming the entire capacity.”
+
+* Load Testing
+
+“I would validate the design using realistic load tests rather than assuming it can handle 10K RPS. I would measure throughput, p95/p99 latency, CPU, memory, GC, database utilization and error rates, and identify the actual bottleneck.”
+
+* Monitoring
+
+“I would monitor the complete request path using metrics, logs and distributed tracing. The key metrics would be RPS, p95/p99 latency, error rate, pod utilization, JVM/GC metrics, connection-pool usage, Redis latency and database performance.”
+
+* Failure Handling
+
+“For downstream dependencies, I would use timeouts, retries with exponential backoff where appropriate, circuit breakers and bulkheads. Retries must be controlled because aggressive retries during an outage can turn into a retry storm.”
+
+⭐ Strong final answer for the interviewer
+
+“For a 10K+ RPS API, I would start with a stateless Spring Boot service behind an API Gateway/load balancer and horizontally scale it across Kubernetes pods. I would reduce database pressure using Redis caching, optimized queries, connection pooling and read replicas where appropriate, and move non-critical processing to Kafka asynchronously.
+
+I would also implement rate limiting, timeouts, circuit breakers and proper observability. Most importantly, I would load-test the complete architecture and identify the bottleneck—because handling 10K RPS is not just an application-server problem; it is an end-to-end capacity and scalability problem involving the API, database, cache, messaging and downstream services.”
+
+If interviewer asks: “How many pods would you create for 10K RPS?”
+
+Don't immediately say 10 pods.
+
+Say:
+
+“I wouldn't determine pod count directly from 10K RPS. I would benchmark one pod under the required SLA—for example,
+ if one pod reliably handles 800 RPS at acceptable p99 latency, I need roughly 13 pods for 10K RPS,
+ and I would add additional headroom for failures and traffic spikes. Then I would configure HPA based on the measured capacity.”
+
+That is a much more senior-level answer because you're basing capacity on measurement and SLA, not an arbitrary pod count.
+
+
+4) Your API is slow, but CPU and memory are normal. How would you find the bottleneck?
+
+“If CPU and memory are normal, I wouldn't immediately increase the pod size. I would trace the complete request flow and identify where the latency is being introduced—application code, database, external services, network, connection pools, cache, or JVM-level issues.”
+
+1. Check API latency metrics
+
+“First, I check p50, p95 and p99 latency rather than looking only at average response time. This tells me whether the problem affects most requests or only a subset of slow requests.”
+
+2. Distributed tracing
+
+“I use distributed tracing such as OpenTelemetry/Jaeger or AWS X-Ray to break one request into individual spans. This helps me identify whether the time is spent in the API, database, Redis or downstream services.”
+
+API: 1500 ms
+ ├── Validation:      20 ms
+ ├── Redis:            10 ms
+ ├── DB query:        900 ms  ← Bottleneck
+ └── Downstream API:  500 ms
+3. Database
+
+“I check database query execution time, slow-query logs, execution plans, indexes and connection-pool utilization. A database query waiting for a connection or performing a full table scan can make the API slow even when application CPU is normal.”
+
+4. External/Downstream APIs
+
+“I check the latency and timeout behavior of downstream services. If an external service is taking 2 seconds, my API will also appear slow even though my application CPU and memory are perfectly healthy.”
+
+5. Connection Pool
+
+“I check whether threads are waiting for database or HTTP connections. For example, if HikariCP has exhausted its pool, requests may simply wait for an available connection, creating latency without significant CPU utilization.”
+
+6. Thread Pool
+
+“I check Tomcat/Netty worker threads and application thread dumps for blocked or waiting threads. Synchronous downstream calls, locks or thread-pool exhaustion can cause requests to queue up.”
+
+7. Redis / Cache
+
+“I check cache hit ratio and Redis latency. If the cache has a high miss rate or Redis itself is slow, the application may be falling back to expensive database operations.”
+
+8. Network
+
+“I verify network latency, DNS resolution, load balancer behavior and service-to-service communication. In a microservices architecture, network latency can accumulate across multiple synchronous service calls.”
+
+9. JVM / GC
+
+“Normal memory usage doesn't completely rule out JVM issues, so I check GC pause times, thread dumps and JVM metrics. Frequent stop-the-world pauses or thread contention can increase latency without necessarily showing high CPU.”
+
+10. Profiling
+
+“If the bottleneck is inside the application itself, I use a profiler such as JFR or async-profiler to identify expensive methods, locks and blocking operations. I then optimize the actual hotspot instead of making assumptions.”
+
+⭐ Strong final answer
+
+“If CPU and memory are normal, I would first look at latency breakdown using metrics and distributed tracing. Then I would investigate database queries and connection pools, downstream APIs, thread pools, Redis, network latency, JVM GC and finally profile the application if necessary.
+
+For example, if tracing shows 1.5 seconds total latency and 900 milliseconds is spent waiting for a database query, increasing CPU or pod count won't solve the problem—the correct solution would be to optimize the query, add the right index, improve connection-pool configuration or introduce caching depending on the use case.”
+
+
+5) p50, p95 and p99 latency what does it mean ?
+
+Think of p50, p95, and p99 as a way of understanding how fast your API is for different portions of users/requests.
+
+Simple interview answer
+
+“Percentile latency tells us how long a certain percentage of requests take. p50 represents the median,
+p95 means 95% of requests are faster than that value, and p99 means 99% of requests are faster than that value.”
+| Metric  | Latency | Meaning                                 |
+| ------- | ------: | --------------------------------------- |
+| **p50** |  100 ms | 50% of requests completed within 100 ms |
+| **p95** |  300 ms | 95% completed within 300 ms             |
+| **p99** |  800 ms | 99% completed within 800 ms             |
