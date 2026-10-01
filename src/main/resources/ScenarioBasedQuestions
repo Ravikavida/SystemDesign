@@ -215,3 +215,118 @@ p95 means 95% of requests are faster than that value, and p99 means 99% of reque
 | **p50** |  100 ms | 50% of requests completed within 100 ms |
 | **p95** |  300 ms | 95% completed within 300 ms             |
 | **p99** |  800 ms | 99% completed within 800 ms             |
+
+
+6)How you vaidate  a new user to access your api?
+
+Interview-ready answer
+
+“If I have an API platform and need to onboard a new user or client, I would not directly give them access to the API. I would follow a controlled onboarding and security flow.”
+
+1. Client/User Registration
+
+Register the user/application through an API Developer Portal or internal onboarding process.
+Validate identity using KYC/enterprise identity verification depending on the use case.
+Assign the client an application/client_id.
+
+2. Authentication
+
+For user-based access, I would use OAuth 2.0 / OpenID Connect.
+For service-to-service communication, I would typically use OAuth Client Credentials.
+The client authenticates with the Identity Provider and receives a short-lived access token/JWT.
+
+3. API Authorization
+
+The API Gateway validates the token:
+Signature
+Issuer
+Audience
+Expiration
+Required scopes
+Then apply RBAC/ABAC to determine whether the user/client can access the requested API and resource.
+
+4. API-Level Security
+
+Enforce HTTPS/TLS.
+Apply rate limiting and throttling per client.
+Validate request headers, parameters and payloads.
+Protect against common attacks such as injection, replay and malformed requests.
+For highly sensitive APIs, use mTLS in addition to OAuth.
+
+5. Audit & Monitoring
+
+Log client_id, user identity, API, timestamp, status and correlation ID.
+Never log passwords, tokens or sensitive financial information.
+Monitor failed authentication, unusual traffic and authorization failures.
+Simple architecture
+New User / Client
+       |
+       v
+Developer / Admin Portal
+       |
+       v
+Identity Provider
+(OAuth2 / OIDC)
+       |
+       | Access Token
+       v
+   API Gateway
+       |
+       |-- TLS validation
+       |-- JWT validation
+       |-- Rate limiting
+       |-- Scope validation
+       |
+       v
+Authorization Layer
+(RBAC / ABAC)
+       |
+       v
+     API
+       |
+       v
+  Backend Services
+If the interviewer asks: "How exactly do you onboard a new user?"
+
+You can say:
+
+“First, I create and verify the user's identity. Then I associate the user with an application/client and assign appropriate roles and scopes. The Identity Provider handles authentication and issues a short-lived access token. Every API request goes through the API Gateway, where the token is validated and authorization is performed using RBAC/ABAC. Only after successful authorization is the request forwarded to the backend. I also enforce TLS, rate limiting, input validation, audit logging and monitoring.”
+
+Important distinction to mention
+
+Authentication = Who are you?
+Authorization = What are you allowed to access?
+
+For example:
+
+User: Ravi
+Role: PAYROLL_ADMIN
+
+Scopes:
+    payroll:read
+    payroll:write
+
+If Ravi calls:
+
+GET /api/payroll/123
+Authorization: Bearer <JWT>
+
+the gateway validates the JWT and checks:
+
+Token valid?       YES
+Not expired?       YES
+Audience valid?    YES
+Scope required?    payroll:read → YES
+Role permitted?    PAYROLL_ADMIN → YES
+
+Then the request is allowed.
+
+If he calls:
+
+DELETE /api/payroll/123
+
+but doesn't have payroll:delete, return:
+
+403 Forbidden
+
+A particularly strong JPMorgan-style addition is: “I would make authorization resource-aware as well, so having a role doesn't automatically mean the user can access every resource.” This is where ABAC can complement RBAC.
