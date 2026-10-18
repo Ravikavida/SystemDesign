@@ -1,0 +1,67 @@
+In Spring Boot, both @Primary and @Qualifier are used to resolve dependency injection ambiguity. When you have multiple beans implementing the same interface or sharing the same parent type, Spring will throw a NoUniqueBeanDefinitionException because it does not know which bean to choose.
+
+
+Direct Comparison
+
+
+Feature	        @Primary	                                                          @Qualifier
+Purpose:	    Defines a default fallback bean.	                         Explicitly selects a specific bean by name.
+Placement:	    Source level: Placed on the bean configuration or class.	 Target level: Placed at the injection point.
+Flexibility:    Set once; applies automatically unless overridden.	         Configured manually at every specific point you need it.
+Precedence:	    Lower priority.	                                             Higher priority (overrides @Primary).
+
+
+
+
+1. @Primary (The Default Choice)
+
+You use @Primary when you have a preferred implementation that should be used most of the time.
+java
+public interface NotificationService {
+    void send(String message);
+}
+
+@Component
+@Primary // Marks this as the default bean
+public class EmailNotification implements NotificationService {
+    public void send(String message) { System.out.println("Email: " + message); }
+}
+
+@Component
+public class SmsNotification implements NotificationService {
+    public void send(String message) { System.out.println("SMS: " + message); }
+}
+Use code with caution.
+Injection Point:
+java
+@RestController
+public class NotificationController {
+    @Autowired
+    private NotificationService notificationService;
+    // Spring automatically injects EmailNotification because it is marked @Primary
+}
+
+
+
+
+
+2. @Qualifier (The Specific Choice)
+
+You use @Qualifier when you need exact control over which bean gets injected at a particular location. It matches beans based on their names (which default to camelCase of the class name).
+Injection Point:
+java
+@RestController
+public class UrgentNotificationController {
+    private final NotificationService notificationService;
+
+    // Tells Spring to ignore defaults and specifically fetch the "smsNotification" bean
+    @Autowired
+    public UrgentNotificationController(@Qualifier("smsNotification") NotificationService notificationService) {
+        this.notificationService = notificationService;
+    }
+}
+
+Core Mechanics: What happens if you use both?
+
+If a bean is marked @Primary but you explicitly request a different bean using @Qualifier at the injection point, @Qualifier always wins.
+
