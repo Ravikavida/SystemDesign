@@ -1,0 +1,7 @@
+1. Quick comparison
+Type	 Meaning	                                   Main purpose	                                                                Common tools
+TDD	    Test-Driven Development	                    Write tests before implementation	                                            JUnit 5, Mockito
+BDD	    Behavior-Driven Development	                Define expected behavior in business-readable scenarios	                        Cucumber, Gherkin
+Unit testing	Test one small unit of code in isolation	Verify business logic	                                                JUnit, Mockito
+Integration 	Test interactions between components	   Verify database, APIs, messaging, etc.	                                Spring Boot Test, Testcontainers
+Functional 	    Test whether a feature meets its requirements	 Verify end-to-end functionality	                                REST Assured, Selenium, Postman

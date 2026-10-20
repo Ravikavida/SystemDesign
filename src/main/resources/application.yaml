@@ -1,0 +1,16 @@
+spring:
+    h2:
+        console:
+            enabled: true
+    datasource:
+        username: root
+        password: root
+    batch:
+        job:
+            enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
