@@ -1,6 +1,6 @@
 package com.dsa.systemdesign.service;
 
-import com.dsa.systemdesign.Repository.BookRepository;
+import com.dsa.systemdesign.repository.BookRepository;
 import com.dsa.systemdesign.dto.BookDto;
 import com.dsa.systemdesign.entity.Book;
 import org.springframework.stereotype.Service;

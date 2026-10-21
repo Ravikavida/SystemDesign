@@ -1,4 +1,4 @@
-package com.dsa.systemdesign.Repository;
+package com.dsa.systemdesign.repository;
 
 import com.dsa.systemdesign.entity.Book;
 import org.springframework.data.jpa.repository.JpaRepository;

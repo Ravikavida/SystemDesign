@@ -1,7 +1,7 @@
 package com.dsa.systemdesign.service;
 
 
-import com.dsa.systemdesign.Repository.EmployeeRepository;
+import com.dsa.systemdesign.repository.EmployeeRepository;
 import com.dsa.systemdesign.dto.EmployeeDto;
 import com.dsa.systemdesign.entity.Employee;
 import org.springframework.beans.factory.annotation.Autowired;

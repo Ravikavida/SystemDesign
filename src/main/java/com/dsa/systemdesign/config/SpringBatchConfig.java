@@ -1,7 +1,7 @@
 package com.dsa.systemdesign.config;
 
 
-import com.dsa.systemdesign.Repository.PersonRepository;
+import com.dsa.systemdesign.repository.PersonRepository;
 import com.dsa.systemdesign.entity.Person;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
