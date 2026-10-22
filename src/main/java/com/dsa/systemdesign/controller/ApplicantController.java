@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/v1")
+@RequestMapping("/applicant")
 public class ApplicantController {
 
     private final ApplicantService applicantService;
@@ -30,9 +30,9 @@ public class ApplicantController {
         return ResponseEntity.ok(applicantList);
     }
 
-    @GetMapping
+   /* @GetMapping
     public ResponseEntity<?> getPage(@RequestParam int page, @RequestParam int size){
         List<Applicant> applicantList = applicantService.pagingSortingRepoDemo(page,size);
         return ResponseEntity.ok(applicantList);
-    }
+    }*/
 }
